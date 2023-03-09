@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST MEMORY</title>
+    
+</head>
+<body>
+    <p> Hello web-assembly </p>
+    <script src="structFramework.js"></script>
+    <script>
+
+        registerStruct("struct", {
+            "x" : "int",
+            "y" : "int",
+        });
+
+
+        var memory = new WebAssembly.Memory({
+            initial:256,
+            maximum:1024,
+        });
+
+        var exports;
+        WebAssembly.instantiateStreaming(fetch("structs.wasm"), {
+            js: {
+                mem: memory,
+            },
+            env: {
+                // this is a callback function from c++ malloc
+                emscripten_resize_heap: function (delta) {memory.grow(delta)},
+            },
+        })
+        .then((results) => {
+            exports = results.instance.exports;
+            memory = results.instance.exports.memory;
+        });
+
+        function run_wasm() {
+            
+            
+            const x = document.getElementById("x").value;
+            const y = document.getElementById("y").value;
+
+
+            // Solution 1 using encoding
+            var ptr = startEncodeStruct("struct", {
+                "x" : x,
+                "y" : y,
+            }, memory, exports.wasmalloc);
+
+            
+            var sum = exports.computesumi(ptr);
+            console.log(sum);
+
+            // Solution 2 using c struct and decoding
+            var p = exports.makeS(x,y);
+            var obj = startDecodeStruct("struct", p, memory);
+            console.log("decode obj:",obj);
+            sum = exports.computesumi(p); 
+
+            exports.wasmfree(ptr);
+
+            document.getElementById("ret").innerHTML += `${sum}<br/>`;
+            
+        };
+
+
+    </script>
+
+    <input type="number" id="x">
+    <input type="number" id="y">
+    <button onclick="run_wasm()">Compute</button>
+    <p id="ret"></p>
+
+</body>
+
+</html>

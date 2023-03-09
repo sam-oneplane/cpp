@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST MEMORY</title>
+    
+</head>
+<body>
+    <p> Hello web-assembly </p>
+    <script>
+
+        var memory = new WebAssembly.Memory({
+            initial:256,
+            maximum:1024,
+        });
+
+        var exports;
+        WebAssembly.instantiateStreaming(fetch("structs.wasm"), {
+            js: {
+                mem: memory,
+            },
+            env: {
+                // this is a callback function from c++ malloc
+                emscripten_resize_heap: function (delta) {memory.grow(delta)},
+            },
+        })
+        .then((results) => {
+            exports = results.instance.exports;
+            memory = results.instance.exports.memory;
+        });
+
+        function run_wasm() {
+            
+            
+            const x = document.getElementById("x").value;
+            const y = document.getElementById("y").value;
+            const z = document.getElementById("z").value;
+
+            var ptr = exports.wasmalloc(12);
+            //buff points to ptr in memory where malloc was called with 2 vars
+            var buff = new Uint32Array(memory.buffer, ptr, 2);
+            buff[0] = x;
+            buff[1] = y;
+
+            buff = new Float32Array(memory.buffer, ptr+8, 1);
+            buff[0] = z;
+            console.log(buff);
+
+            var sum = exports.computesumf(ptr);
+            console.log(sum);
+
+            exports.wasmfree(ptr);
+
+
+            document.getElementById("ret").innerHTML += `${sum}<br/>`;
+            
+        };
+
+
+    </script>
+
+    <input type="number" id="x">
+    <input type="number" id="y">
+    <input type="number" id="z">
+    <button onclick="run_wasm()">Compute</button>
+    <p id="ret"></p>
+
+</body>
+</html>

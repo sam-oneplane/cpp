@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST MEMORY</title>
+    
+</head>
+<body>
+    <p> Hello web-assembly </p>
+    <script src="structFramework.js"></script>
+    <script>
+
+        registerStruct("sub", {
+            "val" : "int",
+            "c" : "int",
+        });
+
+
+        registerStruct("struct", {
+            "x" : "int",
+            "y" : "int",
+            "s" : "sub",
+        });
+
+        console.log(types)
+
+
+        var memory = new WebAssembly.Memory({
+            initial:256,
+            maximum:1024,
+        });
+
+        var exports;
+        WebAssembly.instantiateStreaming(fetch("nested_struct.wasm"), {
+            js: {
+                mem: memory,
+            },
+            env: {
+                // this is a callback function from c++ malloc
+                emscripten_resize_heap: function (delta) {memory.grow(delta)},
+            },
+        })
+        .then((results) => {
+            exports = results.instance.exports;
+            memory = results.instance.exports.memory;
+        });
+
+        function run_wasm() {
+            
+            
+            const x = document.getElementById("x").value;
+            const y = document.getElementById("y").value;
+
+            // DECODE
+            var ptr = exports.createstruct(x, y, 37823428, 56);
+            var obj = startDecodeStruct("struct", ptr, memory);
+            console.log(obj);
+
+            // ENCODE
+            var ptr0 = startEncodeStruct("struct", {
+                "x" : x,
+                "y" : y,
+                "s": {
+                    "val" : 420,
+                    "c" : 20,
+                },
+
+            }, memory, exports.wasmalloc);
+
+            var sum = exports.computesum(ptr0);
+            console.log(sum);
+            
+            exports.wasmfree(ptr);
+            exports.wasmfree(ptr0);
+
+
+            document.getElementById("ret").innerHTML += `${sum}<br/>`;
+            
+        };
+
+
+    </script>
+
+    <input type="number" id="x">
+    <input type="number" id="y">
+    <button onclick="run_wasm()">Compute</button>
+    <p id="ret"></p>
+
+</body>
+
+</html>

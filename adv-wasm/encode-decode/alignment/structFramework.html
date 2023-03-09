@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST MEMORY</title>
+    
+</head>
+<body>
+    <p> Hello web-assembly </p>
+    <script src="structFramework.js"></script>
+    <script>
+
+        registerStruct("sub", {
+            "val" : "int",
+            "c" : "int",
+        });
+
+
+        registerStruct("struct", {
+            "x" : "int",
+            "y" : "int",
+            "s" : "sub",
+            "ptr" : "int*",
+            "dptr" : "int**",
+            "arr" : "int[]",
+            "arr_size": "int",
+            "name" : "char[]"
+        });
+
+
+
+        var memory = new WebAssembly.Memory({
+            initial:256,
+            maximum:1024,
+        });
+
+        function decodeString(ptr) {
+            var bytes = new Uint8Array(memory.buffer, ptr);
+            var strlen = 0;
+            while (bytes[strlen] != 0) strlen++;
+
+            return new TextDecoder("utf8").decode(bytes.slice(0, strlen));
+        }
+
+        function printName(ptr) {
+            const str = decodeString(ptr);
+            console.log(str);
+        }
+
+        var exports;
+        WebAssembly.instantiateStreaming(fetch("nested_struct.wasm"), {
+            js: {
+                mem: memory,
+            },
+            env: {
+                // this is a callback function from c++ malloc
+                emscripten_resize_heap: function (delta) {memory.grow(delta)},
+                printName: printName,
+            },
+        })
+        .then((results) => {
+            exports = results.instance.exports;
+            memory = results.instance.exports.memory;
+        });
+
+        function run_wasm() {
+                
+            const x = document.getElementById("x").value;
+            const y = document.getElementById("y").value;
+
+
+            var ptr = exports.createstruct(x, y, 420, 20);
+            var obj = startDecodeStruct("struct", ptr, memory);
+
+            console.log(obj);
+
+            var sum = exports.computesum(ptr);
+            console.log("Decode Sum:", sum)
+
+            const p = exports.getptr(ptr);
+            console.log("Decode pointer:", p);
+
+            const dp = exports.getdptr(ptr);
+            console.log("Decode double pointer:", dp);
+
+            exports.wasmfree(ptr);
+            
+        };
+
+        function encode() {
+
+            const x = document.getElementById("x").value;
+            const y = document.getElementById("y").value;
+
+            console.log(types);
+            var ptr0 = encodePtr("struct", {
+                "x" : x,
+                "y" : y,
+                "s": {
+                    "val" : 420,
+                    "c" : 20,
+                },
+                "ptr": 15,
+
+                "dptr": 60,
+                "arr": [7, 2, -4, 15, -2],
+                "arr_size" : 5,
+                "name": "WebAssembly",
+
+            }, memory, exports.wasmalloc);
+
+
+            var sum = exports.computesum(ptr0);
+            console.log("Encode sum", sum);
+
+            const pVal = exports.getptr(ptr0);
+            console.log("Encode ptr", pVal);
+
+            const dpVal = exports.getdptr(ptr0);
+            console.log("Encode dptr", dpVal);
+
+            const arrSum = exports.sumarr(ptr0);
+             
+            console.log("Encode array sum ", arrSum);
+            
+
+            const arrSumBySize = exports.sumarrbysize(ptr0);
+            console.log("Encode array sum with size", arrSumBySize);
+            
+            const arrAvg = exports.arravg(ptr0) ;
+            console.log("Encode array avg", arrAvg);
+            
+            exports.printname(ptr0);
+            
+            exports.wasmfree(ptr0);
+
+            
+            document.getElementById("ret").innerHTML += `${sum}<br/>`;
+
+        }
+
+    </script>
+
+    <input type="number" id="x">
+    <input type="number" id="y">
+    <button onclick="run_wasm()">Decode</button>
+    <button onclick="encode()">Encode</button>
+    <p id="ret"></p>
+
+</body>
+
+</html>
