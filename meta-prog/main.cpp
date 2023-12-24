@@ -9,7 +9,6 @@
 #include "templateMeta.h"
 #include "templateMetaAdv1.h"
 
-
 int main(int argc, const char * argv[])
 {
 
@@ -21,10 +20,10 @@ int main(int argc, const char * argv[])
 	cout << endl ;
 	IF<0>::EXEC() ;
 	//***************
-	typedef FRAK<1,2> HALF ;
-	typedef FRAK<2,3> TWO_BY3 ;
-    typedef FRAK<3,12> ONE_Q ;
-    typedef FRAK<1,6> ONE_BY6 ;
+	typedef FRAC<1,2> HALF ;
+	typedef FRAC<2,3> TWO_BY3 ;
+    typedef FRAC<3,12> ONE_Q ;
+    typedef FRAC<1,6> ONE_BY6 ;
 #if 1
 	typedef SCALAR_MUL<5,HALF>::RESULT MUL_RESULT ;
 	cout << "1/2*5 RESULT IS : " << MUL_RESULT::NUM << "/" << MUL_RESULT::DEN << endl ;
@@ -32,8 +31,8 @@ int main(int argc, const char * argv[])
     cout << "2/3*7 RESULT IS : " << SCALAR_MUL<7,TWO_BY3>::RESULT::NUM << "/" << SCALAR_MUL<7,TWO_BY3>::RESULT::DEN << endl ;
 	//***************
 	
-	typedef SIMPL<ONE_Q> MY_FREK ;
-	cout << "3/12 MCD IS : " << MY_FREK::MY_MCD << " THE NEW FREC IS : " ;
+	typedef SIMPL<ONE_Q> MY_FREC ;
+	cout << "3/12 MCD IS : " << MY_FREC::MY_MCD << " THE NEW FREC IS : " ;
 	//** this will cause an error : WHY
 	cout << SIMPL<ONE_Q>::S_RESULT::NUM << " / "  <<  SIMPL<ONE_Q>::S_RESULT::DEN << endl ;
     //***************
@@ -42,7 +41,7 @@ int main(int argc, const char * argv[])
     cout << SAME_BASE<HALF, ONE_BY6>::X::NUM << "/" << SAME_BASE<HALF, ONE_BY6>::X::DEN  << "  " ;
     cout << SAME_BASE<HALF, ONE_BY6>::Y::NUM << "/" << SAME_BASE<HALF, ONE_BY6>::Y::DEN << endl  ;
     cout << SUM<HALF, ONE_BY6>::NUM << "/" << SUM<HALF, ONE_BY6>::DEN << " == "  ;
-    cout << SUM<HALF, ONE_BY6>::SIMPLE_FRAK::MY_MCD  << endl ;
+    cout << SUM<HALF, ONE_BY6>::SIMPLE_FRAC::MY_MCD  << endl ;
     // e = S(1/n!) = 1/0! + 1/1! + 1/2! ....
     
     return 0;

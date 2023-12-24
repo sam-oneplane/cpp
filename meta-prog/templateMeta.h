@@ -10,9 +10,7 @@
 #define TemplateMetaProgramming_templateMeta_h
 
 
-
 #include <iostream>
-using namespace std ;
 
 // Templates that calculate a value  :
 template <unsigned char byte>
@@ -70,29 +68,29 @@ template <int i>
 class LOOP {
 public:
 	static inline void EXEC() {
-		cout << "A-" << i << " " ;
+		std::cout << "A-" << i << " " ;
 		LOOP<i-1>::EXEC() ;
 		static const int RESULT = i   ;
-		cout << " " << RESULT  ;
+		std::cout << " " << RESULT  ;
 	}
 };
 
 template <> class LOOP<0> {
 public:
 	static inline void EXEC() {
-		cout << "A-" << 0  ;
-		cout << "\n" ;
+		std::cout << "A-" << 0  ;
+		std::cout << "\n" ;
 		static const int RESULT = 0 ;
-		cout << RESULT  ;
+		std::cout << RESULT  ;
 	}
 };
 //**************************************
-// template to perform IF statment
+// template to perform IF statement
 template <bool expr>
 class IF {
 public:
 	static inline void EXEC() {
-		cout << "TRUE" << endl ;
+		std::cout << "TRUE" << std::endl ;
 	}
 };
 
@@ -104,7 +102,7 @@ public:
 };
 //**************************************
 // define fractions
-template <long N , long D> class FRAK {
+template <long N , long D> class FRAC {
 public:
 	static const long NUM = N ;
 	static const long DEN = D ;
@@ -113,14 +111,14 @@ public:
 template <int N , typename F> class SCALAR_MUL {
 public:
 	// use typedef for like return value RESULT
-	typedef FRAK<N*F::NUM, F::DEN> RESULT ;
+	typedef FRAC<N*F::NUM, F::DEN> RESULT ;
 };
 
 //**************************************
-// most common devidor : MCD
+// most common dev : MCD
 template <long X , long Y> class MCD {
 public:
-	// static const types is used in this case for compile time template meta programing
+	// static const types is used in this case for compile time template meta programming
 	static const long RESULT = MCD<Y,X%Y>::RESULT ;
 };
 
@@ -130,11 +128,11 @@ public:
 };
 //**************************************
 // using MCD :
-// F is a FRAK class ; MCD receives F::NUM and F::DEN as template args and return the result
+// F is a FRAC class ; MCD receives F::NUM and F::DEN as template args and return the result
 template <typename F> class  SIMPL {
 public:
 	static const long MY_MCD = MCD<F::NUM,F::DEN>::RESULT ;
-	typedef  FRAK<F::NUM/MY_MCD , F::DEN/MY_MCD> S_RESULT ;
+	typedef  FRAC<F::NUM/MY_MCD , F::DEN/MY_MCD> S_RESULT ;
 };
 //**************************************
 // CALC e = SUM(1/n!)  = 1/0! + 1/1! + 1/2! + 1/3! ....
@@ -158,13 +156,13 @@ public:
     typedef SAME_BASE<X, Y> B ;
     static const long NUM = B::X::NUM + B::Y::NUM ;
     static const long DEN = (long)(B::X::DEN * B::Y::DEN) ;
-    typedef SIMPL<FRAK<NUM,DEN>> SIMPLE_FRAK ;
+    typedef SIMPL<FRAC<NUM,DEN>> SIMPLE_FRAC ;
 };
 //**************************************
 template <int N> class E {
 public:
     static const long DEN = FACT<N>::RESULT ;
-    typedef FRAK<1, DEN> TERM ;
+    typedef FRAC<1, DEN> TERM ;
     typedef typename E<N-1>::TERM NEXT_TERM ;
     typedef typename SUM<TERM, NEXT_TERM>::RESULT RESULT ;
 };
