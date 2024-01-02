@@ -34,4 +34,5 @@
 /.vscode
 
 /emsdk
-
+conc-c++11/bin/*
+conc-c++11/out/*
